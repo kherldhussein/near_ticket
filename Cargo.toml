@@ -1,8 +1,8 @@
 [package]
-name = "near-smart-contract-rust-template"
+name = "near-ticket"
 version = "0.1.0"
 edition = "2021"
-authors = ["Jacob Lindahl <jacob@near.foundation>"]
+authors = ["Khalid Hussein <kherld11@gmail.com>"]
 
 [dependencies]
 near-sdk = "4.0.0-pre.7"

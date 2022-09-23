@@ -631,18 +631,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "near-smart-contract-rust-template"
+name = "near-sys"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6a7aa3f46fac44416d8a93d14f30a562c4d730a1c6bf14bffafab5f475c244a"
+
+[[package]]
+name = "near-ticket"
 version = "0.1.0"
 dependencies = [
  "near-contract-standards",
  "near-sdk",
 ]
-
-[[package]]
-name = "near-sys"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6a7aa3f46fac44416d8a93d14f30a562c4d730a1c6bf14bffafab5f475c244a"
 
 [[package]]
 name = "near-vm-errors"
