@@ -1,5 +1,7 @@
 # NEAR Smart Contract Rust Template
 
+RVSP to any event made easy....
+
 Project structure for writing smart contracts in Rust for NEAR Protocol
 
 # Required Software
@@ -8,6 +10,6 @@ Project structure for writing smart contracts in Rust for NEAR Protocol
 - Node.js
 - NEAR CLI 3.1
 
-# Authors
+# Author
 
-- Jacob Lindahl <jacob@near.foundation> [@sudo_build](https://twitter.com/sudo_build)
+- Khalid Hussein <kherld11@gmail.com> [@kherldhussein](https://twitter.com/kherldhussein)
