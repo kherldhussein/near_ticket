@@ -1,6 +1,6 @@
 # NEAR Smart Contract Rust Template
 
-RVSP to any event made easy....
+RSVP to any event made easy....
 
 Project structure for writing smart contracts in Rust for NEAR Protocol
 
