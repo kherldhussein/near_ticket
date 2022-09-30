@@ -13,12 +13,12 @@ pub type EventId = u32;
 #[derive(Clone, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct User {
-  pub userid: String,
+  pub user_id: String,
 }
 
 impl User {
-  fn new(userid: String) -> Self {
-    User { userid }
+  fn new(user_id: String) -> Self {
+    User { user_id }
   }
 }
 
@@ -96,7 +96,7 @@ pub enum Status {
 pub struct Booking {
   // status: Status,
   uid: AccountId,
-  ticket: HashMap<String, Ticket>,
+  ticket: HashMap<String, TicketId>,
   users: HashMap<String, User>,
   event_creator: Vec<Event>,
 }
@@ -105,7 +105,7 @@ impl Booking {
   // #[init]
   pub fn new(uid: AccountId) -> Self {
     let users: HashMap<String, User> = HashMap::new();
-    let ticket: HashMap<String, Ticket> = HashMap::new();
+    let ticket: HashMap<String, TicketId> = HashMap::new();
     let event_creator: Vec<Event> = Vec::new();
 
     Booking {
@@ -120,7 +120,8 @@ impl Booking {
   fn get_ticket(&mut self, event_id: EventId) {
     let account_id = env::signer_account_id();
     let user = String::from(account_id);
-
+    let ticket_id = self.event_creator.len() as u32;
+    let u_name: Vec<&str> = user.split('.').collect();
     // activate user
     match self.uid == user {
       true => {
@@ -128,48 +129,52 @@ impl Booking {
 
         let events = &mut self.event_creator;
         let book = 'booking: loop {
-          const ONE_NEAR: u128 = u128::pow(10, 24);
-          let acc_balance = env::account_balance();
           events.iter().for_each(|event| {
             if event.eid == event_id {
-              // check event tickets avaiability
+              // check event tickets availability
               let available = Status::Available;
               if let Status::Available = available {
                 let available_tickets = event.mounts_tickets;
                 if available_tickets != 0 {
-                  
+                  const ONE_NEAR: u128 = u128::pow(10, 24);
+                  let acc_balance = env::account_balance();
+                  if acc_balance > 1 {
+                    let organizer_id = env::current_account_id();
+                    self
+                      .ticket
+                      .insert(user.to_owned(), available_tickets.to_string());
+                    Promise::new(organizer_id).transfer(ONE_NEAR);
+                    log!(
+                      "{} You have successfully RSVP to {}",
+                      u_name[0],
+                      event.description
+                    );
+                  } else {
+                    env::log_str("You do not have sufficient funds to make this purchase");
+                  }
+                } else {
+                  env::log_str("No tickets remaining ");
                 }
-                //               env::log_str("Less tickets remaining ");
-                //             } else {
-                //               // book
-                //             }
-                //             //     let vip_ticket = self.ticket;
-                //             //     if acc_balance > 1 {
-                //             //       break 'booking;
-                //             //     } else {
-                //             //       env::log_str("Available amount is low");
-                //             //     }
-                //             //     // if let Ticket::Vip(_) = vip_ticket {
-                //             //     //   let val = self.ticket;
               } else {
-                //             env::log_str("No tickets available ");
+                env::log_str("Event Closed ");
               }
             }
           })
         };
+        
+        let booked: Result<(), String> = Ok(book);
+        match booked {
+          Ok(()) => todo!("Sent ticket details"),
+          Err(_) => {
+            env::log_str("Try Later");
+          }
+        }
       }
       false => {
-        //     // self.users.insert(user, User::new(userid.to_string()));
-        //     // continue 'booking;
+        // self.users.insert(user, User::new(user_id.to_string()));
+        // continue 'booking;
       }
     }
-
-    // let booked: Result<(), String> = Ok(book);
-    // match booked {
-    // Ok(()) => todo!("Sent ticket details"),
-    // Err(_) => {
-    //   env::log_str("Try Later");
-    // }
   }
 
   // pub fn check_event_status(&mut self, available: i32) -> Status {
@@ -255,7 +260,7 @@ impl Booking {
 
           Ok(Promise::new(organizer_id).transfer(ONE_NEAR))
         } else {
-          let err = format!("Account insufficient balace");
+          let err = format!("Account insufficient balance");
           Err(err)
         }
       }
