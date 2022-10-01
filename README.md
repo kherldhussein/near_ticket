@@ -1,6 +1,8 @@
 # NEAR Smart Event RSVP Contract
 
-RSVP to any event made easy...
+RSVP just got easy...
+
+Create or get ticket to any event 
 
 Project structure for writing smart contracts in Rust for NEAR Protocol
 
