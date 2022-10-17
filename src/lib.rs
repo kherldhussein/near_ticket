@@ -1,12 +1,11 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LookupMap;
-// use near_sdk::bs58::encode::Error;
 use near_sdk::{env, log, Promise};
 use std::collections::HashMap;
 
 pub type AccountId = String;
 pub type TicketId = String;
 pub type EventId = String;
+pub type OrderNumber = String;
 
 // Event creator && Ticket booking app for the Events
 
@@ -52,10 +51,8 @@ impl Event {
       description,
       price,
       venue,
-      // ticket_id,
       mounts_tickets,
       status,
-      // ticket_type,
       event_organizer,
       eid,
     }
@@ -66,12 +63,27 @@ impl Event {
 // #[serde(crate = "near_sdk::serde")]
 pub struct Ticket {
   ticket_id: TicketId,
+  event_id: EventId,
   ticket_owner: String,
   ticket_description: String,
   // Standard(Option<i32>),
   // Vip(Option<i32>),
 }
-
+impl Ticket {
+  fn new(
+    ticket_id: TicketId,
+    event_id: EventId,
+    ticket_owner: String,
+    ticket_description: String,
+  ) -> Self {
+    Ticket {
+      ticket_id,
+      event_id,
+      ticket_owner,
+      ticket_description,
+    }
+  }
+}
 #[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone, Copy)]
 // #[serde(crate = "near_sdk::serde")]
 pub enum Status {
@@ -94,215 +106,138 @@ pub enum Status {
 pub struct Booking {
   // status: Status,
   uid: AccountId,
-  ticket: HashMap<AccountId, String>,
+  ticket: HashMap<OrderNumber, Ticket>,
   users: HashMap<String, User>,
-  event_creator: LookupMap<AccountId, Vec<EventId>>,
-  creator_events: HashMap<EventId, Event>,
+  event_creator: Vec<Event>,
+  // creator_events: HashMap<EventId, Event>,
 }
 
 impl Booking {
   // #[init]
   pub fn new(uid: AccountId) -> Self {
     let users: HashMap<String, User> = HashMap::new();
-    let ticket: HashMap<AccountId, String> = HashMap::new();
-    let event_creator: LookupMap<AccountId, Vec<EventId>> = LookupMap::new(b"m");
-    let creator_events: HashMap<EventId, Event> = HashMap::new();
+    let ticket: HashMap<OrderNumber, Ticket> = HashMap::new();
+    let event_creator: Vec<Event> = Vec::new();
+    // let creator_events: HashMap<EventId, Event> = HashMap::new();
 
     Booking {
       uid,
       ticket,
       users,
       event_creator,
-      creator_events,
+      // creator_events,
     }
   }
 
-  // pub fn match_info(&mut self) -> Option<Vec<Matches>> {}
-  fn get_ticket(&mut self, event_id: EventId) {
-    let account_id = env::signer_account_id();
-    let user = String::from(account_id);
-    let organizer_id = env::current_account_id();
-    let u_name: Vec<&str> = user.split('.').collect();
-    // activate user
-    match self.uid == user {
-      true => {
-        // Check available event and get details
-
-        let event = self.creator_events.get(&event_id).expect("NO_EVENT_FOUND");
-        let available = Status::Available;
-
-        if let Status::Available = available {
-          let available_tickets = event.mounts_tickets;
-          // check event tickets availability
-          if available_tickets != 0 {
-            // let random_order = Rng::new(env::random_seed());
-            let order_num = event.eid.to_string() + &event.mounts_tickets.to_string();
-            const ONE_NEAR: u128 = u128::pow(10, 24);
-
-            let acc_balance = env::account_balance();
-            if acc_balance > 1 {
-              // Create Order number of each event a random num
-              self.ticket.insert(user.to_owned(), order_num);
-
-              Promise::new(organizer_id).transfer(ONE_NEAR);
-              log!(
-                "{} You have successfully RSVP to {}",
-                u_name[0],
-                event.description
-              );
-            } else {
-              env::log_str("You do not have sufficient funds to make this purchase");
-            }
-          } else {
-            env::log_str("No tickets remaining ");
-          }
-        }
-
-        // let book = 'booking: loop {};
-
-        // let booked: Result<(), String> = Ok(book);
-        // match booked {
-        //   Ok(()) => todo!("Sent ticket details to email"),
-        //   Err(_) => {
-        //     env::log_str("Try Later");
-        //   }
-        // }
-      }
-      false => {
-        // self.users.insert(user, User::new(user_id.to_string()));
-        // continue 'booking;
-      }
-    }
-  }
-
-  // pub fn check_event_status(&mut self, available: i32) -> Status {
-  //   // let available_std = Ticket::Standard(Some(available));
-  //   let available_vip = Ticket::Vip(Some(available));
-
-  //   if
-  //   // available_std != Ticket::Standard(Some(0))
-  //   // ||
-  //   available_vip != Ticket::Vip(Some(0)) {
-  //     log!(
-  //       "There is available ticket for Standard , and for VIP {:?}",
-  //       // Some(available_std),
-  //       Some(available_vip)
-  //     );
-  //     Status::Available
-  //   } else {
-  //     log!("No available Tickets!");
-  //     Status::Unavailable
-  //   }
-  // }
-
-  pub fn view_events(&self, organizer_id: AccountId) -> Vec<&Event> {
-    let mut registered_events = Vec::new();
-
-    match self.event_creator.get(&organizer_id) {
-      Some(events) => {
-        for event_id in events {
-          let event = self.creator_events.get(&event_id).expect("No_EVENTS_FOUND");
-          match event.status {
-            Status::Available => {
-              let available_tickets = event.mounts_tickets;
-              if available_tickets > 0 {
-                log!("{} Tickets Available", available_tickets);
-              }
-              env::log_str("Event Available");
-            }
-            Status::Unavailable => env::log_str("Event Unavailable"),
-          }
-          registered_events.push(event);
-        }
-      }
-      None => {}
-    }
-    if registered_events.is_empty() {
-      registered_events.to_vec()
-    } else {
-      return vec![];
-    }
-  }
-
-  pub fn count_events(&mut self) -> usize {
-    self.creator_events.len()
-  }
-
-  pub fn check_ticket_info(&mut self, ticket_id: String) -> Vec<&Ticket> {
-    let mut owned_tickets: Vec<&Ticket> = vec![];
-    let tickets = &self.ticket;
-    tickets.iter().for_each(|ticket| {
-      // owned_tickets.push(ticket);
-      match ticket.try_to_vec() {
-        Ok(_) => log!("{} ticket", ticket.0),
-        Err(_) => todo!(),
-      }
-    });
-
-    if !owned_tickets.is_empty() {
-      return owned_tickets.to_vec();
-    } else {
-      return vec![];
-    }
-    // match self.ticket.get(&ticket_id) {
-    //   Some(ticket_info) => {
-    //           for  ticket_id in ticket_info {
-
-    //           }
-    //   }
-    //   None => todo!(),
-    // }
-  }
-
+  // Create Events
   pub fn new_event(&mut self, description: String, price: i32, venue: String, ticket_amount: i32) {
     let account_id = env::signer_account_id();
     let user = String::from(account_id);
     let organizer_id = env::current_account_id();
-    let event_id = self.creator_events.len() as u32;
+    let event_id = self.event_creator.len() as u32;
+    let available_ticket = Some(ticket_amount);
+
     match user == self.uid {
       true => {
-        self.creator_events.insert(
-          event_id.to_string(),
-          Event::new(
+        if available_ticket.unwrap() > 0 {
+          let status = Status::Available;
+          self.event_creator.push(Event::new(
             description,
             price,
             venue,
             ticket_amount,
-            Status::Available,
+            status,
             organizer_id.to_string(),
             event_id,
-          ),
-        );
-        match self.event_creator.get(&organizer_id.to_string()) {
-          Some(mut events) => {
-            events.push(event_id.clone().to_string());
-            self
-              .event_creator
-              .insert(&organizer_id.to_string(), &events.to_owned());
-          }
-          None => {
-            let new_event = vec![event_id.to_string()];
-            self
-              .event_creator
-              .insert(&organizer_id.to_string(), &new_event);
-          }
+          ));
         }
       }
       false => (),
     }
   }
+
+  // View events
+  pub fn view_events(&self) -> Vec<Event> {
+    let events = &self.event_creator;
+    events.to_vec()
+  }
+
+  // Get events ticket
+  fn get_ticket(&mut self, event_id: EventId) {
+    let account_id = env::signer_account_id();
+    let user = String::from(account_id);
+
+    let u_name: Vec<&str> = user.split('.').collect();
+    let ticket_id = self.ticket.len() as u32;
+    // activate user
+    match self.uid == user {
+      true => {
+        // Check available event and get details
+
+        let events = &mut self.event_creator;
+        let ticket = &mut self.ticket;
+
+        let available = Status::Available;
+
+        if let Status::Available = available {
+          events.iter().for_each(|event| {
+            if event.eid.to_string() == event_id {
+              let order_num = event.eid.to_string() + &event.mounts_tickets.to_string();
+              const ONE_NEAR: u128 = u128::pow(10, 24);
+              let acc_balance = env::account_balance();
+              let organizer_id = env::current_account_id();
+              if acc_balance > 1 {
+                ticket.insert(
+                  order_num,
+                  Ticket::new(
+                    ticket_id.to_string(),
+                    event_id.to_owned(),
+                    user.to_owned(),
+                    event.description.to_owned(),
+                  ),
+                );
+
+                Promise::new(organizer_id).transfer(ONE_NEAR);
+                log!(
+                  "{} You have successfully RSVP to {}\n Your ticket info has been sent to {}@near.io",
+                  u_name[0],
+                  event.description,
+                  u_name[0],
+                );
+              } else {
+                env::log_str("You do not have sufficient funds to make this purchase");
+              }
+            }
+          });
+        }
+      }
+      false => {}
+    }
+  }
+
+  pub fn count_events(&mut self) -> usize {
+    self.event_creator.len()
+  }
+
+  pub fn count_tickets(&mut self) -> usize {
+    self.ticket.len()
+  }
+
+  // View ticket
+  pub fn check_ticket_info(&mut self) {
+    let account_id = env::signer_account_id();
+    let tickets = &self.ticket;
+    let user = String::from(account_id);
+    match self.uid == user {
+      true => match self.ticket.get("") {
+        Some(_) => todo!(),
+        None => todo!(),
+      },
+      false => {}
+    }
+  }
 }
 
-// impl Booking {
-//   fn buy_ticket(&mut self, ticket_owner: AccountId, event_id: EventId, ticket_id: TicketId) {
-//     match self.ticket.get(&ticket_owner) {
-//       Some(ticket_info) => {
-//         ticket_info.insert(ticket_id.to_owned(), event_id.clone());
-//       }
-//       None => todo!(),
-//     }
-//   }
-// }
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -335,7 +270,31 @@ mod tests {
     contract.new_event("NEARCON 2022".to_string(), 500, "Lisbon".to_string(), 230);
     contract.new_event("NEARCON 2023".to_string(), 800, "Nairobi".to_string(), 380);
 
-    assert_eq!(contract.count_events(), 3, "Expected 2 Events");
+    assert_eq!(contract.count_events(), 2, "Expected 2 Events");
+  }
+
+  #[test]
+  fn test_get_events() {
+    let kherld = AccountId::new_unchecked("kherld.testnet".to_string());
+    // set up the mock context into the testing environment
+    let context = get_context(to_valid_account("kherld.testnet"));
+
+    testing_env!(context.build());
+    let mut contract = Booking::new(kherld.to_string());
+    contract.new_event(
+      "NEARCON 2023".to_string(),
+      800,
+      "In-Person".to_string(),
+      3000,
+    );
+
+    let events = contract.view_events();
+
+    let status = Status::Available;
+    assert_eq!(
+      events[0].status, status,
+      "For event to be available, amount of ticket must be > 0"
+    );
   }
 
   #[test]
@@ -346,10 +305,13 @@ mod tests {
 
     testing_env!(context.build());
     let mut contract = Booking::new(kherld.to_string());
-    // print ticket id here
-    contract.get_ticket(2.to_string());
-    let events = contract.view_events(kherld.to_string());
-    events.to_vec();
-    // assert_eq!(contract.get_ticket());
+    contract.new_event("NEARCON 2023".to_string(), 800, "In-Person".to_string(), 1);
+    contract.get_ticket(0.to_string());
+    contract.view_events();
+    let status = Status::Available;
+    assert_eq!(
+      events[0].status, status,
+      "For event to be available, amount of ticket must be > 0"
+    );
   }
 }
