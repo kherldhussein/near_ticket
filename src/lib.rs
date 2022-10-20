@@ -103,7 +103,7 @@ pub enum Status {
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 // #[serde(crate = "near_sdk::serde")]
-pub struct Booking {
+pub struct Contract {
   // status: Status,
   uid: AccountId,
   ticket: HashMap<OrderNumber, Ticket>,
@@ -112,7 +112,7 @@ pub struct Booking {
   // creator_events: HashMap<EventId, Event>,
 }
 
-impl Booking {
+impl Contract {
   // #[init]
   pub fn new(uid: AccountId) -> Self {
     let users: HashMap<String, User> = HashMap::new();
@@ -120,7 +120,7 @@ impl Booking {
     let event_creator: Vec<Event> = Vec::new();
     // let creator_events: HashMap<EventId, Event> = HashMap::new();
 
-    Booking {
+    Contract {
       uid,
       ticket,
       users,
@@ -226,7 +226,7 @@ impl Booking {
   // View ticket
   pub fn check_ticket_info(&mut self) {
     let account_id = env::signer_account_id();
-    let tickets = &self.ticket;
+    // let tickets = &self.ticket;
     let user = String::from(account_id);
     match self.uid == user {
       true => match self.ticket.get("") {
@@ -265,7 +265,7 @@ mod tests {
     let context = get_context(to_valid_account("kherld.testnet"));
 
     testing_env!(context.build());
-    let mut contract = Booking::new(kherld.to_string());
+    let mut contract = Contract::new(kherld.to_string());
 
     contract.new_event("NEARCON 2022".to_string(), 500, "Lisbon".to_string(), 230);
     contract.new_event("NEARCON 2023".to_string(), 800, "Nairobi".to_string(), 380);
@@ -280,7 +280,7 @@ mod tests {
     let context = get_context(to_valid_account("kherld.testnet"));
 
     testing_env!(context.build());
-    let mut contract = Booking::new(kherld.to_string());
+    let mut contract = Contract::new(kherld.to_string());
     contract.new_event(
       "NEARCON 2023".to_string(),
       800,
@@ -304,7 +304,7 @@ mod tests {
     let context = get_context(to_valid_account("kherld.testnet"));
 
     testing_env!(context.build());
-    let mut contract = Booking::new(kherld.to_string());
+    let mut contract = Contract::new(kherld.to_string());
     contract.new_event("NEARCON 2023".to_string(), 800, "In-Person".to_string(), 1);
     contract.get_ticket(0.to_string());
     let events = contract.view_events();
