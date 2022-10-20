@@ -307,7 +307,7 @@ mod tests {
     let mut contract = Booking::new(kherld.to_string());
     contract.new_event("NEARCON 2023".to_string(), 800, "In-Person".to_string(), 1);
     contract.get_ticket(0.to_string());
-    contract.view_events();
+    let events = contract.view_events();
     let status = Status::Available;
     assert_eq!(
       events[0].status, status,
