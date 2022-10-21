@@ -226,13 +226,14 @@ impl Contract {
   // View ticket
   pub fn check_ticket_info(&mut self) {
     let account_id = env::signer_account_id();
-    // let tickets = &self.ticket;
+    let tickets = &self.ticket;
     let user = String::from(account_id);
     match self.uid == user {
-      true => match self.ticket.get("") {
-        Some(_) => todo!(),
-        None => todo!(),
-      },
+      true => {
+        for (order_number, ticket_info) in tickets {
+          log!("{:?} for {:?}", order_number, ticket_info);
+        }
+      }
       false => {}
     }
   }
@@ -307,6 +308,7 @@ mod tests {
     let mut contract = Contract::new(kherld.to_string());
     contract.new_event("NEARCON 2023".to_string(), 800, "In-Person".to_string(), 1);
     contract.get_ticket(0.to_string());
+    // let ticket = contract.check_ticket_info();
     let events = contract.view_events();
     let status = Status::Available;
     assert_eq!(
