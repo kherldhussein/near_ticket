@@ -209,6 +209,9 @@ impl Contract {
               }
             }
           });
+          for ticket_info in ticket {
+            log!("Your Order Number is {:?}", ticket_info.0);
+          }
         }
       }
       false => {}
@@ -224,14 +227,16 @@ impl Contract {
   }
 
   // View ticket
-  pub fn check_ticket_info(&mut self) {
+  pub fn check_ticket_info(&mut self, order_number: String) {
     let account_id = env::signer_account_id();
     let tickets = &self.ticket;
     let user = String::from(account_id);
     match self.uid == user {
       true => {
-        for (order_number, ticket_info) in tickets {
-          log!("{:?} for {:?}", order_number, ticket_info);
+        for ticket_info in tickets {
+          if ticket_info.0 == &order_number {
+            log!("Your ticket info {:?}", ticket_info.1);
+          }
         }
       }
       false => {}
@@ -250,13 +255,15 @@ mod tests {
     AccountId::try_from(account.to_string()).expect("Invalid account")
   }
 
+  const ONE_NEAR: u128 = u128::pow(10, 24);
+
   fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
-    builder.signer_account_id(predecessor);
+    builder
+      .account_balance(100 * ONE_NEAR)
+      .signer_account_id(predecessor);
     builder
   }
-
-  const ONE_NEAR: u128 = u128::pow(10, 24);
 
   #[test]
   fn test_create_event() {
@@ -275,7 +282,7 @@ mod tests {
   }
 
   #[test]
-  fn test_get_events() {
+  fn test_create_events() {
     let kherld = AccountId::new_unchecked("kherld.testnet".to_string());
     // set up the mock context into the testing environment
     let context = get_context(to_valid_account("kherld.testnet"));
@@ -315,5 +322,19 @@ mod tests {
       events[0].status, status,
       "For event to be available, amount of ticket must be > 0"
     );
+  }
+
+  #[test]
+  fn test_check_ticket_info() {
+    let kherld = AccountId::new_unchecked("kherld.testnet".to_string());
+    // set up the mock context into the testing environment
+    let context = get_context(to_valid_account("kherld.testnet"));
+
+    testing_env!(context.build());
+    let mut contract = Contract::new(kherld.to_string());
+    contract.new_event("NEARCON 2023".to_string(), 800, "In-Person".to_string(), 66);
+    contract.get_ticket(0.to_string());
+    let ticket = contract.check_ticket_info("066".to_string());
+    assert_eq!((), ticket);
   }
 }
