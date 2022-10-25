@@ -27,10 +27,8 @@ pub struct Event {
   description: String,
   price: i32,
   venue: String,
-  // ticket_id: EventId,
   status: Status,
   mounts_tickets: i32,
-  // ticket_type: String,
   event_organizer: AccountId,
   eid: u32,
 }
@@ -104,12 +102,10 @@ pub enum Status {
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 // #[serde(crate = "near_sdk::serde")]
 pub struct Contract {
-  // status: Status,
   uid: AccountId,
   ticket: HashMap<OrderNumber, Ticket>,
   users: HashMap<String, User>,
   event_creator: Vec<Event>,
-  // creator_events: HashMap<EventId, Event>,
 }
 
 impl Contract {
@@ -118,14 +114,12 @@ impl Contract {
     let users: HashMap<String, User> = HashMap::new();
     let ticket: HashMap<OrderNumber, Ticket> = HashMap::new();
     let event_creator: Vec<Event> = Vec::new();
-    // let creator_events: HashMap<EventId, Event> = HashMap::new();
 
     Contract {
       uid,
       ticket,
       users,
       event_creator,
-      // creator_events,
     }
   }
 
