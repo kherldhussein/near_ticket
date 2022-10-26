@@ -1,4 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::serde::Serialize;
 use near_sdk::{env, log, near_bindgen, Promise};
 use std::collections::HashMap;
 
@@ -20,7 +21,9 @@ impl User {
   }
 }
 
-#[derive(Clone, BorshDeserialize, BorshSerialize, Debug)]
+#[near_bindgen]
+#[derive(Clone, BorshDeserialize, BorshSerialize, Debug, Serialize)]
+#[serde(crate = "near_sdk::serde")]
 pub struct Event {
   description: String,
   price: i32,
@@ -31,6 +34,7 @@ pub struct Event {
   eid: u32,
 }
 
+#[near_bindgen]
 impl Event {
   fn new(
     description: String,
@@ -77,7 +81,8 @@ impl Ticket {
     }
   }
 }
-#[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone, Copy)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone, Copy, Serialize)]
+#[serde(crate = "near_sdk::serde")]
 pub enum Status {
   Available,
   Unavailable,
@@ -94,7 +99,7 @@ pub enum Status {
 // }
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Default)]
 pub struct Contract {
   uid: AccountId,
   ticket: HashMap<OrderNumber, Ticket>,
