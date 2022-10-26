@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, log, Promise, near_bindgen};
+use near_sdk::{env, log, near_bindgen, Promise};
 use std::collections::HashMap;
 
 pub type AccountId = String;
@@ -10,7 +10,6 @@ pub type OrderNumber = String;
 // Event creator && Ticket booking app for the Events
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Debug)]
-// #[serde(crate = "near_sdk::serde")]
 pub struct User {
   pub user_id: String,
 }
@@ -22,7 +21,6 @@ impl User {
 }
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Debug)]
-// #[serde(crate = "near_sdk::serde")]
 pub struct Event {
   description: String,
   price: i32,
@@ -39,9 +37,7 @@ impl Event {
     price: i32,
     venue: String,
     mounts_tickets: i32,
-    // ticket_id: EventId,
     status: Status,
-    // ticket_type: String,
     event_organizer: AccountId,
     eid: u32,
   ) -> Self {
@@ -58,7 +54,6 @@ impl Event {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone)]
-// #[serde(crate = "near_sdk::serde")]
 pub struct Ticket {
   ticket_id: TicketId,
   event_id: EventId,
@@ -83,7 +78,6 @@ impl Ticket {
   }
 }
 #[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, Clone, Copy)]
-// #[serde(crate = "near_sdk::serde")]
 pub enum Status {
   Available,
   Unavailable,
@@ -101,7 +95,6 @@ pub enum Status {
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
-// #[serde(crate = "near_sdk::serde")]
 pub struct Contract {
   uid: AccountId,
   ticket: HashMap<OrderNumber, Ticket>,
