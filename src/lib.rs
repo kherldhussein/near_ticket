@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, log, Promise};
+use near_sdk::{env, log, Promise, near_bindgen};
 use std::collections::HashMap;
 
 pub type AccountId = String;
@@ -99,6 +99,7 @@ pub enum Status {
 //   }
 // }
 
+#[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 // #[serde(crate = "near_sdk::serde")]
 pub struct Contract {
@@ -108,8 +109,9 @@ pub struct Contract {
   event_creator: Vec<Event>,
 }
 
+#[near_bindgen]
 impl Contract {
-  // #[init]
+  #[init]
   pub fn new(uid: AccountId) -> Self {
     let users: HashMap<String, User> = HashMap::new();
     let ticket: HashMap<OrderNumber, Ticket> = HashMap::new();
